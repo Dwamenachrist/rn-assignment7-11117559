@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, SafeAreaView, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import productList from '../components/product'; // Ensure the correct path to productList.js
 import Menu from '../components/menu';
 
 const ProductsScreen = ({ navigation }) => {
@@ -9,19 +8,37 @@ const ProductsScreen = ({ navigation }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    setProducts(productList);
+    fetchProducts();
   }, []);
 
-  const handleAddToCart = async (product) => {
-    try {
-      const storedCart = await AsyncStorage.getItem('cart');
-      let cart = storedCart ? JSON.parse(storedCart) : [];
-      cart.push(product);
-      await AsyncStorage.setItem('cart', JSON.stringify(cart));
-      console.log('Added to cart:', product);
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('https://fakestoreapi.com/products');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+  
+    const handleAddToCart = async (product) => {
+      try {
+        const storedCart = await AsyncStorage.getItem('cart');
+        let cart = storedCart ? JSON.parse(storedCart) : [];
+        cart.push(product);
+        await AsyncStorage.setItem('cart', JSON.stringify(cart));
+        console.log('Added to cart:', product);
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+      }
+    };
+
+  const truncateText = (text, maxLength) => {
+    if (text.length <= maxLength) {
+      return text;
     }
+    return text.substr(0, maxLength) + '...';
   };
 
   return (
@@ -59,27 +76,29 @@ const ProductsScreen = ({ navigation }) => {
       </View>
 
       <FlatList
-      data={products}
-      keyExtractor={(item) => item.id.toString()}
-      numColumns={2}
-      contentContainerStyle={styles.productListContent}
-      renderItem={({ item }) => (
-        <View style={styles.productContainer}>
-          <View style={styles.imageContainer}>
-            <Image source={item.image} style={styles.productImage} />
-            <TouchableOpacity style={styles.addToCartButton} onPress={() => handleAddToCart(item)}>
-              <Image source={require("../assets/add_circle.png")} style={styles.addToCartIcon} />
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        contentContainerStyle={styles.productListContent}
+        renderItem={({ item }) => (
+          <View style={styles.productContainer}>
+            <View style={styles.imageContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate('Productdetail', { productId: item.id })}>
+                <Image source={{ uri: item.image }} style={styles.productImage} />
             </TouchableOpacity>
-          </View>
+              <TouchableOpacity style={styles.addToCartButton} onPress={() => handleAddToCart(item)}>
+                <Image source={require("../assets/add_circle.png")} style={styles.addToCartIcon} />
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.productDetails}>
-            <Text style={styles.productName}>{item.title}</Text>
-            <Text style={styles.productType}>{item.type}</Text>
-            <Text style={styles.productPrice}>${item.price}</Text>
+            <View style={styles.productDetails}>
+              <Text style={styles.productName}>{item.title}</Text>
+              <Text style={styles.productType}>{truncateText(item.description, 40)}</Text>
+              <Text style={styles.productPrice}>${item.price}</Text>
+            </View>
           </View>
-        </View>
-      )}
-    />
+        )}
+      />
     </SafeAreaView>
   );
 };

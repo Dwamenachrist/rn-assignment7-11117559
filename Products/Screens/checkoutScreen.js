@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, FlatList, Text, SafeAreaView, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native'; // Import Alert
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const truncateText = (text, maxLength) => {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.substr(0, maxLength) + '...';
+};
+
 const Checkout = () => {
   const [cartItems, setCartItems] = useState([]);
 
@@ -15,7 +22,7 @@ const Checkout = () => {
     fetchCartItems();
   }, []); 
 
-  const handleRemoveFromCart = async (productId) => { // Pass productId, not item
+  const handleRemoveFromCart = async (productId) => { 
     try {
       let cart = await AsyncStorage.getItem('cart');
       cart = cart ? JSON.parse(cart) : [];
@@ -28,6 +35,10 @@ const Checkout = () => {
     }
   };
 
+  const getTotal = () => {
+    return cartItems.reduce((total, item) => total + item.price, 0).toFixed(2);
+  };
+
   const renderCartItem = ({ item }) => {
     const imageSource = typeof item.image === 'string' ? { uri: item.image } : item.image;
 
@@ -37,6 +48,7 @@ const Checkout = () => {
         <View style={styles.itemDetails}>
           <Text style={{fontWeight: 'bold'}}>{item.title}</Text>
           <Text style={{color: '#545454'}}>{item.type}</Text>
+          <Text style={styles.productType}>{truncateText(item.description, 40)}</Text>
           <Text style={{color: '#dd8560'}}>${item.price}</Text>
         </View>
         <TouchableOpacity style={styles.addToCartButton} onPress={() => handleRemoveFromCart(item.id)}>
@@ -69,7 +81,22 @@ const Checkout = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderCartItem}
       />
+
+      <View style={styles.totalContainer}>
+        <Text style={styles.totalText}>E S T . T O T A L</Text>
+        <Text style={[styles.totalPrice, { color: '#e99d7e' }]}>${getTotal()}</Text>
+      </View>
+
+    <View style={styles.AddToBasket}>
+      <TouchableOpacity >
+        <Image source={require("../assets/shoppingBag.png")} style={{tintColor: 'white' , marginLeft: 90}} />
+		</TouchableOpacity>
+        <Text style={{ color: "white", marginLeft: 10, fontSize: 22 }}>
+        CHECKOUT
+        </Text>
+		</View>
     </SafeAreaView>
+    
   );
 };
 
@@ -81,6 +108,27 @@ const styles = StyleSheet.create({
   },
   addToCartButton: {
     alignSelf: 'flex-end',
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  totalText: {
+    fontSize: 16,
+    color: '#666',
+    paddingLeft: 20,
+  },
+  totalPrice: {
+    paddingRight: 30,
+    fontSize: 16,
+    color: 'black',
+  },
+  AddToBasket: {
+    flexDirection: "row",
+    backgroundColor: "black",
+    padding: 20,
   },
   header: {
     flexDirection: 'row',

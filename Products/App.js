@@ -12,6 +12,7 @@ import LocationsScreen from "./Screens/LocationsScreen";
 import ClothingScreen from "./Screens/ClothingScreen";
 import BlogScreen from "./Screens/BlogScreen";
 import StoreScreen from "./Screens/StoreScreen";
+import Productdetail from "./Screens/ProductdetailScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -65,6 +66,11 @@ function App() {
           options={{ headerShown: false }}
           name="Store"
           component={StoreScreen}
+        />
+        <Stack.Screen
+          options={{ headerShown: false }}
+          name="Productdetail"
+          component={Productdetail}
         />
       </>
       </Stack.Navigator>
